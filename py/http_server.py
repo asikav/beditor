@@ -4,6 +4,7 @@ import os
 import re
 import BaseHTTPServer
 import urlparse
+import urllib
 import mimetypes
 import cgi
 import json
@@ -60,8 +61,9 @@ class BeditorServer(BaseHTTPServer.BaseHTTPRequestHandler):
             return ''
 
         # print dir(self.headers)
+        print(urlparse.parse_qs(self.path))
         url_split = urlparse.urlsplit(self.path)
-        path = url_split.path
+        path = urllib.unquote(url_split.path)
 
         if re.match('/favicon.ico', path):
             return self.content_file('../img/favicon.ico')
@@ -87,10 +89,10 @@ class BeditorServer(BaseHTTPServer.BaseHTTPRequestHandler):
         if re.match('/do/load/.+', path):
             m = re.match('/do/load(.+)', path)
             dir_path = m.group(1)
-            dir_path = dir_path.rstrip('/') + '/'
+            dir_path = dir_path.rstrip('/')
 
             if os.path.isdir(dir_path):
-
+                dir_path = dir_path + '/'
                 try:
                     def make_dir_ref(root_ref, root_path, path):
                         if path == root_path:
@@ -144,7 +146,6 @@ class BeditorServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     return json.dumps(d)
                 except Exception as e:
                     import traceback
-
                     traceback.print_exc()
                     print str(e)
                     print ("directory {} not found".format(dir_path))
@@ -165,7 +166,7 @@ class BeditorServer(BaseHTTPServer.BaseHTTPRequestHandler):
             return ''
 
         url_split = urlparse.urlsplit(self.path)
-        path = url_split.path
+        path = urllib.unquote(url_split.path)
 
         if re.match('/do/save/.+', path):
             m = re.match('/do/save(.+)', path)
