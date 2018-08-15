@@ -87,33 +87,39 @@ class BeditorServer(BaseHTTPServer.BaseHTTPRequestHandler):
         if re.match('/do/load/.+', path):
             m = re.match('/do/load(.+)', path)
             dir_path = m.group(1)
+            dir_path = dir_path.rstrip('/') + '/'
 
             if os.path.isdir(dir_path):
 
                 try:
                     def make_dir_ref(root_ref, root_path, path):
+                        if path == root_path:
+                            return root_ref
                         opath = path
-                        path = path.rstrip('/')
                         prefix = root_path
                         ref = root_ref
                         while True:
-                            path2 = path[len(prefix):]
-                            prefix = path[:len(prefix)]
-                            path = path2
-                            l = path.find('/')
-                            if path == '':
-                                break
-                            if l == -1:
-                                ref['nodes'].append({
+                            path = path[len(prefix):]
+                            prefix = path.split('/')[0] + '/'
+                            if prefix == path:
+                                i = 0
+                                for i in range(len(ref['nodes'])):
+                                    if 'nodes' not in ref['nodes'][i] or ref['nodes'][i]['text'] > path:
+                                        break
+                                ref['nodes'].insert(i, {
                                     'text': path,
                                     'href': '/load' + opath,
                                     'nodes': list(),
                                     'state': {
                                         'expanded': False,
-                                      },                                
+                                    },
                                 })
-                                ref = ref['nodes'][-1]
+                                ref = ref['nodes'][i]
                                 break
+                            for n in ref['nodes']:
+                                if n['text'] == prefix:
+                                    ref = n
+                                    break
                         return ref
 
                     d = {
@@ -125,18 +131,22 @@ class BeditorServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     }
 
                     for (dirpath, dirnames, filenames) in os.walk(dir_path):
+                        dirpath = dirpath.rstrip('/') + '/'
                         ref = make_dir_ref(d, dir_path, dirpath)
                         for f in filenames:
-                            p = dirpath.rstrip('/') + '/'
                             ref['nodes'].append({
                                 'text': f,
-                                'href': '/load' + p + f,
+                                'href': '/load' + dirpath + f,
                             })
+                            ref['nodes'].sort(key=lambda x: x['text'])
 
                     self.content_success(ctype='application/json')
                     return json.dumps(d)
                 except Exception as e:
-                    print e
+                    import traceback
+
+                    traceback.print_exc()
+                    print str(e)
                     print ("directory {} not found".format(dir_path))
 
             else:
