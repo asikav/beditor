@@ -80,9 +80,9 @@ class BeditorServer(BaseHTTPServer.BaseHTTPRequestHandler):
             dir_path = m.group(1)
 
             if os.path.isdir(dir_path):
-                return self.content_file('/Users/kaveh/Desktop/beditor/html/list.html')
+                return self.content_file('../html/list.html')
             else:
-                return self.content_file('/Users/kaveh/Desktop/beditor/html/edit.html')
+                return self.content_file('../html/edit.html')
 
         if re.match('/do/load/.+', path):
             m = re.match('/do/load(.+)', path)
