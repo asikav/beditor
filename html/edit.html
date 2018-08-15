@@ -1,0 +1,150 @@
+<html>
+  <meta charset="utf-8"/>
+
+  <head>
+    <!-- <link rel="stylesheet" href="/bootstrap-3.3.7-dist/css/bootstrap.min.css"> -->
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous"> -->
+
+    <link rel="stylesheet" href="/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="/codemirror/addon/fold/foldgutter.css">
+    <link rel="stylesheet" href="/codemirror/addon/dialog/dialog.css">
+    <link rel="stylesheet" href="/codemirror/theme/monokai.css">
+    <script src="/codemirror/lib/codemirror.js"></script>
+    <script src="/codemirror/addon/search/searchcursor.js"></script>
+    <script src="/codemirror/addon/search/search.js"></script>
+    <script src="/codemirror/addon/dialog/dialog.js"></script>
+    <script src="/codemirror/addon/edit/matchbrackets.js"></script>
+    <script src="/codemirror/addon/edit/closebrackets.js"></script>
+    <script src="/codemirror/addon/comment/comment.js"></script>
+    <script src="/codemirror/addon/wrap/hardwrap.js"></script>
+    <script src="/codemirror/addon/fold/foldcode.js"></script>
+    <script src="/codemirror/addon/fold/brace-fold.js"></script>
+    <script src="/codemirror/mode/javascript/javascript.js"></script>
+    <script src="/codemirror/mode/python/python.js"></script>
+    <script src="/codemirror/mode/clike/clike.js"></script>
+    <script src="/codemirror/keymap/sublime.js"></script>
+    <style type="text/css">
+      .CodeMirror {border-top: 1px solid #eee; border-bottom: 1px solid #eee; line-height: 1.3; height: 500px}
+      .CodeMirror-linenumbers { padding: 0 8px; }
+    </style>
+
+  </head>
+
+  <body>
+
+    <div id='id_div_nav'>
+      <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+        <a class="navbar-brand text-light text-small" id="id_a_filename"></a>
+
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="id_button_dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            File type
+          </button>
+          <div class="dropdown-menu" aria-labelledby="id_button_dropdownMenuButton" id="id_div_dropdown">
+          </div>
+        </div>
+
+      </nav>
+    </div>
+    <main role="main" class="container">
+      <div id="id_div_editor">
+      <!-- <div id='id_react_connections'> -->
+      </div>
+    </main>
+    <script src="/js/jquery-3.3.1.min.js"></script>
+    <!-- <script src="/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script> -->
+    <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <script src="/js/bootstrap-treeview.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+
+      var cm_editor;
+
+      function set_codemirror_mode(m) {
+        $('#id_button_dropdownMenuButton').text(m);
+        cm_editor.setOption("mode", m);
+      }
+
+      function fetch_file_content(file_path) {
+
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var file_content = this.responseText;
+
+                $('#id_a_filename').text(file_path);
+                cm_editor = CodeMirror(document.getElementById("id_div_editor"), {
+                  value: file_content,
+                  lineNumbers: true,
+                  mode: "python",
+                  keyMap: "sublime",
+                  autoCloseBrackets: true,
+                  matchBrackets: true,
+                  showCursorWhenSelecting: true,
+                  theme: "monokai",
+                  tabSize: 2,
+                  extraKeys: {
+                        "Ctrl-S": function() {
+                          $.ajax({
+                            processData: false,
+                            type: "POST",
+                            url: "/do/save"+file_path,
+                            data: cm_editor.getValue(),
+                            contentType: "application/text",
+                            dataType: "text",
+                            success: function(data) {
+                              console.log(new Date() + ': save successfull');
+                              $('#id_a_filename').removeClass('text-danger');
+                              $('#id_a_filename').addClass('text-light');
+                            },
+                            failure: function(errMsg) {
+                              console.log(new Date() + ': save failed');
+                            }
+                          });
+                        }
+                  }
+                  // onChange: function(cm) {
+                  //   console.log('change');
+                  // }
+                });
+                set_codemirror_mode("python");
+                cm_editor.setSize("100%", "100%");
+                cm_editor.focus();
+                cm_editor.on("change", function(cm, change) {
+                  $('#id_a_filename').removeClass('text-light');
+                  $('#id_a_filename').addClass('text-danger');
+                });
+            }
+        };
+        xmlhttp.open("GET", "/do/load"+file_path, true);
+        xmlhttp.send();
+      }
+
+      $(function() {
+
+        var json_file_list;
+        var file_path;
+        file_path = window.location.pathname;
+        file_path = file_path.substr('/load'.length, file_path.length);
+
+        fetch_file_content(file_path);
+
+        var cm_modes = ['clike', 'python', 'javascript'];
+
+        for (var i = 0; i < cm_modes.length; i ++) {
+          $("#id_div_dropdown").append("<a class='dropdown-item' onclick=set_codemirror_mode('"+cm_modes[i]+"');>"+cm_modes[i]+'</a>');
+        }
+              
+
+
+      });
+
+    </script>
+  </body>
+</html>
